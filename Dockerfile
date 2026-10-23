@@ -1,5 +1,8 @@
 FROM php:8.3.36-fpm-alpine3.23
 
+# WITH_GD=1 include GD con JPEG/FreeType/PNG; 0 (default) la esclude
+ARG WITH_GD=0
+
 # 1. Installazione librerie di runtime, Nginx e Supervisor
 RUN apk add --no-cache \
     nginx \
@@ -12,7 +15,12 @@ RUN apk add --no-cache \
     libxslt \
     krb5 \
     openssl \
-    libcurl
+    libcurl \
+    oniguruma \
+    gettext-libs \
+    && if [ "$WITH_GD" = "1" ]; then \
+        apk add --no-cache freetype libjpeg-turbo libpng; \
+    fi
 
 # 1b. Pacchetti dev temporanei per la compilazione (verranno rimossi dopo)
 RUN apk add --no-cache \
@@ -24,14 +32,17 @@ RUN apk add --no-cache \
     openssl-dev \
     curl-dev \
     gettext-dev \
-    freetype-dev \
-    libjpeg-turbo-dev \
-    libpng-dev \
     oniguruma-dev \
-    linux-headers
+    linux-headers \
+    && if [ "$WITH_GD" = "1" ]; then \
+        apk add --no-cache freetype-dev libjpeg-turbo-dev libpng-dev; \
+    fi
 
 # 2. Configurazione e installazione moduli PHP standard
-RUN docker-php-ext-install -j$(nproc) \
+RUN if [ "$WITH_GD" = "1" ]; then \
+        docker-php-ext-configure gd --with-freetype --with-jpeg; \
+    fi \
+    && docker-php-ext-install -j$(nproc) \
     calendar \
     ctype \
     dom \
@@ -50,13 +61,16 @@ RUN docker-php-ext-install -j$(nproc) \
     opcache \
     curl \
     mbstring \
-    gd
+    $( [ "$WITH_GD" = "1" ] && echo gd )
 
 # 3. Installazione Imagick tramite PECL e pulizia delle dipendenze di build
 # Rimuoviamo le librerie -dev per mantenere l'immagine leggera
 RUN pecl install imagick \
     && docker-php-ext-enable imagick \
-    && apk del $PHPIZE_DEPS imagemagick-dev libxml2-dev libxslt-dev krb5-dev openssl-dev curl-dev gettext-dev linux-headers
+    && apk del $PHPIZE_DEPS imagemagick-dev libxml2-dev libxslt-dev krb5-dev openssl-dev curl-dev gettext-dev oniguruma-dev linux-headers \
+    && if [ "$WITH_GD" = "1" ]; then \
+        apk del freetype-dev libjpeg-turbo-dev libpng-dev; \
+    fi
 
 # 4. Creazione cartelle di lavoro e configurazione permessi
 RUN mkdir -p /run/nginx /var/www/html \

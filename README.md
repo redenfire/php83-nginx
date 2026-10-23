@@ -8,7 +8,8 @@ Ottimizzata per applicazioni web che richiedono molte estensioni PHP (Imagick, X
 - **Nginx** come web server
 - **PHP-FPM** come process manager PHP (modello FastCGI)
 - **Supervisor** per mantenere entrambi attivi
-- **Estensioni PHP** abilitate: `calendar`, `ctype`, `dom`, `exif`, `fileinfo`, `filter`, `ftp`, `gettext`, `mysqli`, `pdo_mysql`, `shmop`, `sockets`, `sysvmsg`, `sysvsem`, `sysvshm`, `xsl`, `opcache`, `curl`, `imagick`
+- **Estensioni PHP** abilitate: `calendar`, `ctype`, `dom`, `exif`, `fileinfo`, `filter`, `ftp`, `gettext`, `mbstring`, `mysqli`, `pdo_mysql`, `shmop`, `sockets`, `sysvmsg`, `sysvsem`, `sysvshm`, `xsl`, `opcache`, `curl`, `imagick`
+- **GD** (con JPEG/FreeType/PNG) solo nelle varianti con GD (`WITH_GD=1`, tag `*-gd`)
 
 ## Struttura
 
@@ -20,10 +21,16 @@ Ottimizzata per applicazioni web che richiedono molte estensioni PHP (Imagick, X
 
 ## Build manuale dell'immagine
 
-Dalla root del repository:
+Dalla root del repository, variante normale (senza GD):
 
 ```bash
 docker build -t nginx-fpm .
+```
+
+Variante con GD (JPEG, FreeType, PNG):
+
+```bash
+docker build --build-arg WITH_GD=1 -t nginx-fpm-gd .
 ```
 
 Puoi specificare un nome/tag diverso:
@@ -42,34 +49,40 @@ docker build --platform linux/amd64 -t nginx-fpm .
 
 ## Usare l'immagine prebuild da GitHub
 
-L'immagine viene compilata automaticamente su GitHub Actions ad ogni push su `main` o tag `v*` e pubblicata su GitHub Container Registry con due tag separati:
+L'immagine viene compilata automaticamente su GitHub Actions ad ogni push su `main` o tag `v*` e pubblicata su GitHub Container Registry in due varianti: **normale** (senza GD) e **con GD** (JPEG/FreeType/PNG).
 
-| Tag                       | Architettura |
-|---------------------------|-------------|
-| `ghcr.io/redenfire/php81-nginx:latest` | **amd64** (x86_64) |
-| `ghcr.io/redenfire/php81-nginx:arm`    | **arm64** |
+| Tag                        | Architettura | Variante |
+|----------------------------|--------------|----------|
+| `ghcr.io/redenfire/php83-nginx:latest`    | **amd64** (x86_64) | normale |
+| `ghcr.io/redenfire/php83-nginx:arm`       | **arm64** | normale |
+| `ghcr.io/redenfire/php83-nginx:latest-gd` | **amd64** (x86_64) | con GD |
+| `ghcr.io/redenfire/php83-nginx:arm-gd`    | **arm64** | con GD |
 
 Pull per architettura amd64:
 
 ```bash
-docker pull ghcr.io/redenfire/php81-nginx:latest
+docker pull ghcr.io/redenfire/php83-nginx:latest       # normale
+docker pull ghcr.io/redenfire/php83-nginx:latest-gd    # con GD
 ```
 
 Pull per architettura arm64 (es. Raspberry Pi, Apple Silicon):
 
 ```bash
-docker pull ghcr.io/redenfire/php81-nginx:arm
+docker pull ghcr.io/redenfire/php83-nginx:arm          # normale
+docker pull ghcr.io/redenfire/php83-nginx:arm-gd       # con GD
 ```
 
 Per una versione con tag specifico (es. `v1`):
 
 ```bash
-docker pull ghcr.io/redenfire/php81-nginx:v1      # amd64
-docker pull ghcr.io/redenfire/php81-nginx:arm-v1  # arm64
+docker pull ghcr.io/redenfire/php83-nginx:v1            # amd64 normale
+docker pull ghcr.io/redenfire/php83-nginx:arm-v1        # arm64 normale
+docker pull ghcr.io/redenfire/php83-nginx:gd-v1         # amd64 con GD
+docker pull ghcr.io/redenfire/php83-nginx:arm-gd-v1     # arm64 con GD
 ```
 
 > Se il package non è pubblico, devi prima fare login con `docker login ghcr.io -u NOME_UTENTE --password-stdin`.
-> L'immagine `:latest` è solo **amd64**: su ARM va usata `:arm`.
+> I tag `latest` e `arm` sono **senza** GD; per GD usa `latest-gd` e `arm-gd`.
 
 ## Esecuzione
 
@@ -89,7 +102,7 @@ docker run -d --name nginx-fpm -p 8080:80 -v /path/del/tuo/codice:/var/www/html 
 
 ## Verifica
 
-Senza codice montato la home restituisce `403` (directory `/var/www/html` vuota). Per testare che PHP-FPM funzioni:
+Senza un file `index.php`/`index.html` nel document root la home restituisce `403`. Per testare che PHP-FPM funzioni:
 
 ```bash
 docker exec nginx-fpm sh -c 'echo "<?php echo \"ok \" . PHP_VERSION; ?>" > /var/www/html/index.php'
