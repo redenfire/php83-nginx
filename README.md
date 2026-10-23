@@ -124,5 +124,5 @@ docker rmi nginx-fpm
 
 ## Note
 
-- Il container esegue come `root` perché Nginx e Supervisor richiedono privilegi elevati; i worker Nginx/PHP-FPM girano come `www-data`.
+- Il container esegue come `root` perché Nginx e Supervisor richiedono privilegi elevati; i worker Nginx girano come `nginx`, quelli PHP-FPM come `www-data`.
 - `COPY . /var/www/html` copia il codice sorgente all'interno dell'immagine. Se usi un volume basta ignorarlo.
