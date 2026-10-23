@@ -27,7 +27,8 @@ RUN apk add --no-cache \
     freetype-dev \
     libjpeg-turbo-dev \
     libpng-dev \
-    oniguruma-dev
+    oniguruma-dev \
+    linux-headers
 
 # 2. Configurazione e installazione moduli PHP standard
 RUN docker-php-ext-install -j$(nproc) \
@@ -55,7 +56,7 @@ RUN docker-php-ext-install -j$(nproc) \
 # Rimuoviamo le librerie -dev per mantenere l'immagine leggera
 RUN pecl install imagick \
     && docker-php-ext-enable imagick \
-    && apk del $PHPIZE_DEPS imagemagick-dev libxml2-dev libxslt-dev krb5-dev openssl-dev curl-dev gettext-dev
+    && apk del $PHPIZE_DEPS imagemagick-dev libxml2-dev libxslt-dev krb5-dev openssl-dev curl-dev gettext-dev linux-headers
 
 # 4. Creazione cartelle di lavoro e configurazione permessi
 RUN mkdir -p /run/nginx /var/www/html \
