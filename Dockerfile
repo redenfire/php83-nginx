@@ -1,6 +1,6 @@
 FROM php:8.3.36-fpm-alpine3.23
 
-# WITH_GD=1 include GD con JPEG/FreeType/PNG; 0 (default) la esclude
+# WITH_GD=1 include GD con JPEG/FreeType/PNG/WebP e cwebp; 0 (default) la esclude
 ARG WITH_GD=0
 
 # 1. Installazione librerie di runtime, Nginx e Supervisor
@@ -19,7 +19,7 @@ RUN apk add --no-cache \
     oniguruma \
     gettext-libs \
     && if [ "$WITH_GD" = "1" ]; then \
-        apk add --no-cache freetype libjpeg-turbo libpng; \
+        apk add --no-cache freetype libjpeg-turbo libpng libwebp libwebp-tools; \
     fi
 
 # 1b. Pacchetti dev temporanei per la compilazione (verranno rimossi dopo)
@@ -35,12 +35,12 @@ RUN apk add --no-cache \
     oniguruma-dev \
     linux-headers \
     && if [ "$WITH_GD" = "1" ]; then \
-        apk add --no-cache freetype-dev libjpeg-turbo-dev libpng-dev; \
+        apk add --no-cache freetype-dev libjpeg-turbo-dev libpng-dev libwebp-dev; \
     fi
 
 # 2. Configurazione e installazione moduli PHP standard
 RUN if [ "$WITH_GD" = "1" ]; then \
-        docker-php-ext-configure gd --with-freetype --with-jpeg; \
+        docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp; \
     fi \
     && docker-php-ext-install -j$(nproc) \
     calendar \
@@ -69,7 +69,7 @@ RUN pecl install imagick \
     && docker-php-ext-enable imagick \
     && apk del $PHPIZE_DEPS imagemagick-dev libxml2-dev libxslt-dev krb5-dev openssl-dev curl-dev gettext-dev oniguruma-dev linux-headers \
     && if [ "$WITH_GD" = "1" ]; then \
-        apk del freetype-dev libjpeg-turbo-dev libpng-dev; \
+        apk del freetype-dev libjpeg-turbo-dev libpng-dev libwebp-dev; \
     fi
 
 # 4. Creazione cartelle di lavoro e configurazione permessi

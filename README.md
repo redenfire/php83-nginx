@@ -9,7 +9,7 @@ Ottimizzata per applicazioni web che richiedono molte estensioni PHP (Imagick, X
 - **PHP-FPM** come process manager PHP (modello FastCGI)
 - **Supervisor** per mantenere entrambi attivi
 - **Estensioni PHP** abilitate: `calendar`, `ctype`, `dom`, `exif`, `fileinfo`, `filter`, `ftp`, `gettext`, `mbstring`, `mysqli`, `pdo_mysql`, `shmop`, `sockets`, `sysvmsg`, `sysvsem`, `sysvshm`, `xsl`, `opcache`, `curl`, `imagick`
-- **GD** (con JPEG/FreeType/PNG) solo nelle varianti con GD (`WITH_GD=1`, tag `*-gd`)
+- **GD** (con JPEG/FreeType/PNG/WebP) e **cwebp** (`libwebp-tools`) solo nelle varianti con GD (`WITH_GD=1`, tag `*-gd`)
 
 ## Struttura
 
@@ -27,7 +27,7 @@ Dalla root del repository, variante normale (senza GD):
 docker build -t nginx-fpm .
 ```
 
-Variante con GD (JPEG, FreeType, PNG):
+Variante con GD (JPEG, FreeType, PNG, WebP + cwebp):
 
 ```bash
 docker build --build-arg WITH_GD=1 -t nginx-fpm-gd .
@@ -49,7 +49,7 @@ docker build --platform linux/amd64 -t nginx-fpm .
 
 ## Usare l'immagine prebuild da GitHub
 
-L'immagine viene compilata automaticamente su GitHub Actions ad ogni push su `main` o tag `v*` e pubblicata su GitHub Container Registry in due varianti: **normale** (senza GD) e **con GD** (JPEG/FreeType/PNG).
+L'immagine viene compilata automaticamente su GitHub Actions ad ogni push su `main` o tag `v*` e pubblicata su GitHub Container Registry in due varianti: **normale** (senza GD) e **con GD** (JPEG/FreeType/PNG/WebP + `cwebp`).
 
 | Tag                        | Architettura | Variante |
 |----------------------------|--------------|----------|
