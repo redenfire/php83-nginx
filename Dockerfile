@@ -3,8 +3,13 @@ FROM php:8.3.36-fpm-alpine3.23
 # WITH_GD=1 include GD con JPEG/FreeType/PNG/WebP e cwebp; 0 (default) la esclude
 ARG WITH_GD=0
 
+# Fuso orario di sistema e PHP (modificabile in build con --build-arg TZ=...)
+ARG TZ=Europe/Rome
+ENV TZ=${TZ}
+
 # 1. Installazione librerie di runtime, Nginx e Supervisor
 RUN apk add --no-cache \
+    tzdata \
     nginx \
     supervisor \
     curl \
@@ -21,6 +26,12 @@ RUN apk add --no-cache \
     && if [ "$WITH_GD" = "1" ]; then \
         apk add --no-cache freetype libjpeg-turbo libpng libwebp libwebp-tools; \
     fi
+
+# 1a. Fuso orario di sistema e PHP
+RUN cp /usr/share/zoneinfo/${TZ} /etc/localtime \
+    && echo "${TZ}" > /etc/timezone \
+    && printf "[Date]\ndate.timezone = %s\n" "${TZ}" \
+        > /usr/local/etc/php/conf.d/timezone.ini
 
 # 1b. Pacchetti dev temporanei per la compilazione (verranno rimossi dopo)
 RUN apk add --no-cache \

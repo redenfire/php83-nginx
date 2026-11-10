@@ -10,6 +10,7 @@ Ottimizzata per applicazioni web che richiedono molte estensioni PHP (Imagick, X
 - **Supervisor** per mantenere entrambi attivi
 - **Estensioni PHP** abilitate: `calendar`, `ctype`, `dom`, `exif`, `fileinfo`, `filter`, `ftp`, `gettext`, `mbstring`, `mysqli`, `pdo_mysql`, `shmop`, `sockets`, `sysvmsg`, `sysvsem`, `sysvshm`, `xsl`, `opcache`, `curl`, `imagick`
 - **GD** (con JPEG/FreeType/PNG/WebP) e **cwebp** (`libwebp-tools`) solo nelle varianti con GD (`WITH_GD=1`, tag `*-gd`)
+- **`tzdata`** con fuso orario di sistema e PHP configurabile (default `Europe/Rome`)
 
 ## Struttura
 
@@ -31,6 +32,18 @@ Variante con GD (JPEG, FreeType, PNG, WebP + cwebp):
 
 ```bash
 docker build --build-arg WITH_GD=1 -t nginx-fpm-gd .
+```
+
+Per impostare un fuso orario diverso da quello di default (`Europe/Rome`):
+
+```bash
+docker build --build-arg TZ=Europe/London -t nginx-fpm .
+```
+
+Il fuso viene applicato al sistema (`/etc/localtime` + `/etc/timezone`), a `TZ` e a PHP (`date.timezone`). Le varianti GD accettano entrambi gli argomenti:
+
+```bash
+docker build --build-arg WITH_GD=1 --build-arg TZ=Europe/London -t nginx-fpm-gd .
 ```
 
 Puoi specificare un nome/tag diverso:
@@ -125,4 +138,5 @@ docker rmi nginx-fpm
 ## Note
 
 - Il container esegue come `root` perché Nginx e Supervisor richiedono privilegi elevati; i worker Nginx girano come `nginx`, quelli PHP-FPM come `www-data`.
+- Il fuso orario è fissato a build-time (default `Europe/Rome`); per cambiarlo ricostruisci con `--build-arg TZ=...`, perché `date.timezone` è scritto nel file ini di PHP.
 - `COPY . /var/www/html` copia il codice sorgente all'interno dell'immagine. Se usi un volume basta ignorarlo.
